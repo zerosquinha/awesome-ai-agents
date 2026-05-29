@@ -1,0 +1,16 @@
+{
+  "name": "telegram-pergunta-bot",
+  "version": "1.0.0",
+  "description": "Bot de Telegram: responde perguntas direcionadas a voce e encaminha por e-mail",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "node-telegram-bot-api": "^0.66.0",
+    "nodemailer": "^6.9.14"
+  }
+}

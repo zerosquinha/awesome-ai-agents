@@ -25,27 +25,27 @@ function getTransporter() {
 }
 
 /**
- * Encaminha uma pergunta recebida no WhatsApp para o e-mail configurado.
+ * Encaminha uma pergunta recebida no Telegram para o e-mail configurado.
  * @param {object} info
- * @param {string} info.from   Nome/numero de quem enviou
- * @param {string} info.chat   Nome do chat/grupo de origem
+ * @param {string} info.from     Nome/usuario de quem enviou
+ * @param {string} info.chat     Nome do chat/grupo de origem
  * @param {string} info.question Texto da pergunta
- * @param {Date}   info.when   Data/hora da mensagem
+ * @param {Date}   info.when     Data/hora da mensagem
  */
 async function forwardQuestionByEmail({ from, chat, question, when }) {
   const t = getTransporter();
   const stamp = (when || new Date()).toLocaleString('pt-BR');
 
-  const subject = `[WhatsApp] Pergunta de ${from}`;
+  const subject = `[Telegram] Pergunta de ${from}`;
   const text =
-    `Voce recebeu uma pergunta no WhatsApp enquanto estava ausente.\n\n` +
+    `Voce recebeu uma pergunta no Telegram enquanto estava ausente.\n\n` +
     `De: ${from}\n` +
     `Chat: ${chat}\n` +
     `Quando: ${stamp}\n\n` +
     `Pergunta:\n${question}\n`;
 
   const html =
-    `<p>Voce recebeu uma pergunta no WhatsApp enquanto estava ausente.</p>` +
+    `<p>Voce recebeu uma pergunta no Telegram enquanto estava ausente.</p>` +
     `<ul>` +
     `<li><strong>De:</strong> ${escapeHtml(from)}</li>` +
     `<li><strong>Chat:</strong> ${escapeHtml(chat)}</li>` +

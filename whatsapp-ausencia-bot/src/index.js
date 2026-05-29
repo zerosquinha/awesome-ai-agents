@@ -5,7 +5,6 @@ const qrcode = require('qrcode-terminal');
 
 const config = require('./config');
 const { handleAwayNotice } = require('./handlers/awayNotice');
-const { handleForwardQuestion } = require('./handlers/forwardQuestion');
 
 const client = new Client({
   authStrategy: new LocalAuth(), // salva a sessao em .wwebjs_auth (escaneia QR so 1x)
@@ -26,8 +25,7 @@ client.on('disconnected', (r) => console.warn('[whatsapp] desconectado:', r));
 
 client.on('ready', () => {
   console.log('[whatsapp] conectado e pronto! ✅');
-  console.log(`  Bot 1 (aviso de ausencia): ${config.awayNotice.enabled ? 'ON' : 'OFF'}`);
-  console.log(`  Bot 2 (encaminhar perguntas): ${config.forward.enabled ? 'ON' : 'OFF'} -> ${config.forward.toEmail}`);
+  console.log(`  Aviso de ausencia: ${config.awayNotice.enabled ? 'ON' : 'OFF'}`);
 });
 
 client.on('message', async (message) => {
@@ -36,11 +34,7 @@ client.on('message', async (message) => {
     if (message.isStatus || message.fromMe) return;
     if (message.from === 'status@broadcast') return;
 
-    // Bot 2 tem prioridade: se for pergunta direcionada, encaminha e responde.
-    const forwarded = await handleForwardQuestion(message);
-    if (forwarded) return;
-
-    // Caso contrario, Bot 1 envia o aviso de ausencia.
+    // Envia o aviso automatico de ausencia.
     await handleAwayNotice(message);
   } catch (err) {
     console.error('[message] erro ao processar mensagem:', err.message);

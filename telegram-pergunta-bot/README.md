@@ -50,6 +50,10 @@ npm start
 
 Depois, no Telegram, mande uma pergunta para o bot (ou mencione-o num grupo) e ele responderá automaticamente e encaminhará a pergunta para o seu e-mail.
 
+## Rodar 24/7 de graça (sem deixar o PC ligado)
+
+Veja o guia **[HOSPEDAGEM-24-7.md](HOSPEDAGEM-24-7.md)**: publica o bot no **Render** (grátis) e usa o **UptimeRobot** (grátis) para mantê-lo sempre acordado. O projeto já inclui um servidor de saúde (health check) e um `render.yaml` para facilitar.
+
 ## Como o bot detecta uma "pergunta"
 
 Heurística simples (em `src/utils.js`):

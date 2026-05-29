@@ -1,5 +1,6 @@
 'use strict';
 
+const http = require('http');
 const TelegramBot = require('node-telegram-bot-api');
 
 const config = require('./config');
@@ -9,6 +10,20 @@ const { forwardQuestionByEmail } = require('./email');
 if (!config.telegram.token) {
   console.error('Erro: defina TELEGRAM_BOT_TOKEN no arquivo .env (token do @BotFather).');
   process.exit(1);
+}
+
+// Pequeno servidor HTTP de "saude". Necessario em hospedagens como o Render
+// (que exigem uma porta aberta) e usado por monitores tipo UptimeRobot para
+// manter o servico acordado 24/7. Em uso local, simplesmente fica ocioso.
+if (config.healthPort) {
+  http
+    .createServer((req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('Bot do Telegram ativo.');
+    })
+    .listen(config.healthPort, () => {
+      console.log(`[health] servidor de saude ouvindo na porta ${config.healthPort}`);
+    });
 }
 
 const bot = new TelegramBot(config.telegram.token, { polling: true });

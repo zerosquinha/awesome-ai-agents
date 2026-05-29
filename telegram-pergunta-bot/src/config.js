@@ -15,6 +15,10 @@ function num(value, fallback) {
 const config = {
   ownerName: process.env.OWNER_NAME || 'eu',
 
+  // Porta do servidor de saude (HTTP). Hospedagens como o Render definem PORT
+  // automaticamente. Em uso local fica desligado, a menos que voce defina PORT.
+  healthPort: num(process.env.PORT, 0),
+
   telegram: {
     token: process.env.TELEGRAM_BOT_TOKEN || '',
     onlyWhenMentionedInGroups: bool(process.env.ONLY_WHEN_MENTIONED_IN_GROUPS, true),

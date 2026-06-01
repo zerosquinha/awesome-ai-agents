@@ -1,0 +1,35 @@
+# Blueprint do Render (deve ficar na RAIZ do repositorio).
+# Cria o servico do bot do Telegram automaticamente (Render -> New -> Blueprint).
+# Os segredos (sync:false) devem ser preenchidos no painel do Render,
+# nunca neste arquivo, pois ele vai para o GitHub.
+services:
+  - type: web
+    name: telegram-pergunta-bot
+    runtime: node
+    plan: free
+    rootDir: telegram-pergunta-bot
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: OWNER_NAME
+        value: Ze
+      - key: FORWARD_TO_EMAIL
+        value: ze.rosquinha3@gmail.com
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_SECURE
+        value: "true"
+      - key: ONLY_WHEN_MENTIONED_IN_GROUPS
+        value: "true"
+      - key: FORWARD_COOLDOWN_HOURS
+        value: "1"
+      # Segredos: preencha no painel do Render (Environment), nao aqui.
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false

@@ -23,7 +23,7 @@ services:
       - key: SMTP_SECURE
         value: "false"
       - key: ONLY_WHEN_MENTIONED_IN_GROUPS
-        value: "true"
+        value: "false"
       - key: FORWARD_COOLDOWN_HOURS
         value: "1"
       # Remetente do Resend (sem dominio proprio, use o de testes abaixo).

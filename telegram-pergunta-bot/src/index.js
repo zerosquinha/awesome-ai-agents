@@ -85,27 +85,31 @@ async function handleMessage(msg) {
   const text = msg.text || msg.caption || '';
   if (!text || text.startsWith('/')) return;
 
+  const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+
   if (!isDirectedQuestion(msg)) {
     console.log(`[ignorado] mensagem nao reconhecida como pergunta direcionada: "${text}"`);
     return;
   }
-  if (!cooldown.ready(String(msg.chat.id))) {
+  // O cooldown nao se aplica a grupos quando configurado para encaminhar tudo.
+  if (!isGroup && !cooldown.ready(String(msg.chat.id))) {
     console.log('[cooldown] aguardando intervalo antes de encaminhar de novo este chat.');
     return;
   }
+  if (!isGroup) cooldown.mark(String(msg.chat.id));
 
-  cooldown.mark(String(msg.chat.id));
-
-  // 1) Responde SEMPRE primeiro a quem perguntou (parte mais importante).
-  //    Se o e-mail falhar depois, a pessoa ja recebeu a confirmacao.
-  try {
-    await bot.sendMessage(msg.chat.id, buildReply(), {
-      parse_mode: 'Markdown',
-      reply_to_message_id: msg.message_id,
-    });
-    console.log(`[resposta] respondido a ${senderName(msg)} no Telegram.`);
-  } catch (err) {
-    console.error('[resposta] falha ao responder no Telegram:', err.message);
+  // 1) Em conversa privada, responde a quem perguntou. Em grupos, fica
+  //    silencioso (so encaminha por e-mail) para nao poluir a conversa.
+  if (!isGroup) {
+    try {
+      await bot.sendMessage(msg.chat.id, buildReply(), {
+        parse_mode: 'Markdown',
+        reply_to_message_id: msg.message_id,
+      });
+      console.log(`[resposta] respondido a ${senderName(msg)} no Telegram.`);
+    } catch (err) {
+      console.error('[resposta] falha ao responder no Telegram:', err.message);
+    }
   }
 
   // 2) Encaminha por e-mail de forma independente.

@@ -41,6 +41,17 @@ function buildReply() {
   );
 }
 
+// Saudacao mostrada quando a pessoa abre o bot (/start) ou pede ajuda (/help).
+function buildWelcome() {
+  return (
+    `Ola! 👋 Voce chegou ao *canal de recados* de ${config.ownerName}.\n\n` +
+    `${config.ownerName} costuma ficar ausente durante a semana e so acessa ` +
+    `nos fins de semana.\n\n` +
+    `📩 Pode deixar sua *pergunta ou recado* aqui mesmo. Assim que ${config.ownerName} ` +
+    `tomar ciencia, respondera prontamente. 🙏`
+  );
+}
+
 // Decide se a mensagem e uma pergunta direcionada a voce.
 function isDirectedQuestion(msg) {
   const text = msg.text || msg.caption || '';
@@ -81,11 +92,25 @@ function chatName(msg) {
 }
 
 async function handleMessage(msg) {
-  // Ignora comandos (ex.: /start) e mensagens sem texto util.
   const text = msg.text || msg.caption || '';
-  if (!text || text.startsWith('/')) return;
+  if (!text) return;
 
   const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+
+  // Saudacao de boas-vindas quando a pessoa abre o bot (/start) ou pede ajuda
+  // (/help). So faz sentido em conversa privada.
+  if (!isGroup && /^\/(start|help)\b/.test(text)) {
+    try {
+      await bot.sendMessage(msg.chat.id, buildWelcome(), { parse_mode: 'Markdown' });
+      console.log(`[start] saudacao enviada para ${senderName(msg)}.`);
+    } catch (err) {
+      console.error('[start] falha ao enviar saudacao:', err.message);
+    }
+    return;
+  }
+
+  // Ignora os demais comandos (ex.: /algo).
+  if (text.startsWith('/')) return;
 
   if (!isDirectedQuestion(msg)) {
     console.log(`[ignorado] mensagem nao reconhecida como pergunta direcionada: "${text}"`);

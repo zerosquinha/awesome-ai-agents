@@ -85,9 +85,30 @@ async function handleMessage(msg) {
   const text = msg.text || msg.caption || '';
   if (!text || text.startsWith('/')) return;
 
-  if (!isDirectedQuestion(msg)) return;
-  if (!cooldown.ready(String(msg.chat.id))) return;
+  if (!isDirectedQuestion(msg)) {
+    console.log(`[ignorado] mensagem nao reconhecida como pergunta direcionada: "${text}"`);
+    return;
+  }
+  if (!cooldown.ready(String(msg.chat.id))) {
+    console.log('[cooldown] aguardando intervalo antes de encaminhar de novo este chat.');
+    return;
+  }
 
+  cooldown.mark(String(msg.chat.id));
+
+  // 1) Responde SEMPRE primeiro a quem perguntou (parte mais importante).
+  //    Se o e-mail falhar depois, a pessoa ja recebeu a confirmacao.
+  try {
+    await bot.sendMessage(msg.chat.id, buildReply(), {
+      parse_mode: 'Markdown',
+      reply_to_message_id: msg.message_id,
+    });
+    console.log(`[resposta] respondido a ${senderName(msg)} no Telegram.`);
+  } catch (err) {
+    console.error('[resposta] falha ao responder no Telegram:', err.message);
+  }
+
+  // 2) Encaminha por e-mail de forma independente.
   try {
     await forwardQuestionByEmail({
       from: senderName(msg),
@@ -95,13 +116,6 @@ async function handleMessage(msg) {
       question: text,
       when: new Date((msg.date || Date.now() / 1000) * 1000),
     });
-
-    await bot.sendMessage(msg.chat.id, buildReply(), {
-      parse_mode: 'Markdown',
-      reply_to_message_id: msg.message_id,
-    });
-
-    cooldown.mark(String(msg.chat.id));
     console.log(`[encaminhar] pergunta de ${senderName(msg)} enviada para ${config.forward.toEmail}`);
   } catch (err) {
     console.error('[encaminhar] falha ao enviar e-mail:', err.message);
@@ -109,12 +123,22 @@ async function handleMessage(msg) {
 }
 
 bot.on('message', (msg) => {
+  // Log de diagnostico: confirma que QUALQUER mensagem esta chegando ao bot.
+  const preview = msg.text || msg.caption || '(sem texto)';
+  console.log(`[recebido] chat=${msg.chat.id} tipo=${msg.chat.type} de=${(msg.from || {}).username || (msg.from || {}).id}: "${preview}"`);
   handleMessage(msg).catch((err) =>
     console.error('[message] erro ao processar mensagem:', err.message)
   );
 });
 
-bot.on('polling_error', (err) => console.error('[polling]', err.message));
+bot.on('polling_error', (err) => {
+  // 409 = outra instancia do bot esta rodando (puxando as mensagens). Avisa claramente.
+  if (String(err.message).includes('409')) {
+    console.error('[polling] CONFLITO 409: ha outra copia deste bot rodando (outro deploy, ou rodando no seu PC). Pare a outra copia.');
+  } else {
+    console.error('[polling]', err.message);
+  }
+});
 
 bot.getMe()
   .then((me) => {

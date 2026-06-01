@@ -26,9 +26,17 @@ services:
         value: "true"
       - key: FORWARD_COOLDOWN_HOURS
         value: "1"
+      # Remetente do Resend (sem dominio proprio, use o de testes abaixo).
+      - key: RESEND_FROM
+        value: onboarding@resend.dev
       # Segredos: preencha no painel do Render (Environment), nao aqui.
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      # Envio de e-mail via Resend (API HTTP). Recomendado no Render,
+      # pois o plano gratuito bloqueia SMTP. Crie em https://resend.com
+      - key: RESEND_API_KEY
+        sync: false
+      # SMTP (opcional / fallback local). Pode deixar em branco no Render.
       - key: SMTP_USER
         sync: false
       - key: SMTP_PASS

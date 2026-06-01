@@ -32,18 +32,8 @@ function getTransporter() {
   return transporter;
 }
 
-/**
- * Encaminha uma pergunta recebida no Telegram para o e-mail configurado.
- * @param {object} info
- * @param {string} info.from     Nome/usuario de quem enviou
- * @param {string} info.chat     Nome do chat/grupo de origem
- * @param {string} info.question Texto da pergunta
- * @param {Date}   info.when     Data/hora da mensagem
- */
-async function forwardQuestionByEmail({ from, chat, question, when }) {
-  const t = getTransporter();
+function buildContent({ from, chat, question, when }) {
   const stamp = (when || new Date()).toLocaleString('pt-BR');
-
   const subject = `[Telegram] Pergunta de ${from}`;
   const text =
     `Voce recebeu uma pergunta no Telegram enquanto estava ausente.\n\n` +
@@ -51,7 +41,6 @@ async function forwardQuestionByEmail({ from, chat, question, when }) {
     `Chat: ${chat}\n` +
     `Quando: ${stamp}\n\n` +
     `Pergunta:\n${question}\n`;
-
   const html =
     `<p>Voce recebeu uma pergunta no Telegram enquanto estava ausente.</p>` +
     `<ul>` +
@@ -61,7 +50,36 @@ async function forwardQuestionByEmail({ from, chat, question, when }) {
     `</ul>` +
     `<p><strong>Pergunta:</strong></p>` +
     `<blockquote>${escapeHtml(question).replace(/\n/g, '<br>')}</blockquote>`;
+  return { subject, text, html };
+}
 
+// Envio via API HTTP do Resend (porta 443). Funciona em hospedagens que
+// bloqueiam SMTP (como o plano gratuito do Render).
+async function sendViaResend({ subject, text, html }) {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.resend.apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: config.resend.from,
+      to: [config.forward.toEmail],
+      subject,
+      text,
+      html,
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`Resend respondeu ${res.status}: ${detail}`);
+  }
+}
+
+// Envio via SMTP (nodemailer). Usado quando nao ha Resend configurado.
+async function sendViaSmtp({ subject, text, html }) {
+  const t = getTransporter();
   await t.sendMail({
     from: config.smtp.from,
     to: config.forward.toEmail,
@@ -69,6 +87,24 @@ async function forwardQuestionByEmail({ from, chat, question, when }) {
     text,
     html,
   });
+}
+
+/**
+ * Encaminha uma pergunta recebida no Telegram para o e-mail configurado.
+ * Usa Resend (API HTTP) se RESEND_API_KEY estiver definido; senao, SMTP.
+ * @param {object} info
+ * @param {string} info.from     Nome/usuario de quem enviou
+ * @param {string} info.chat     Nome do chat/grupo de origem
+ * @param {string} info.question Texto da pergunta
+ * @param {Date}   info.when     Data/hora da mensagem
+ */
+async function forwardQuestionByEmail(info) {
+  const content = buildContent(info);
+  if (config.resend.apiKey) {
+    await sendViaResend(content);
+  } else {
+    await sendViaSmtp(content);
+  }
 }
 
 function escapeHtml(s = '') {

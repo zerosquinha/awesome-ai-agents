@@ -29,6 +29,14 @@ const config = {
     toEmail: process.env.FORWARD_TO_EMAIL || 'ze.rosquinha3@gmail.com',
   },
 
+  // Resend: envio de e-mail via API HTTP (funciona onde SMTP e bloqueado).
+  // Se RESEND_API_KEY estiver definido, ele e usado no lugar do SMTP.
+  resend: {
+    apiKey: process.env.RESEND_API_KEY || '',
+    // Remetente. Sem dominio proprio, use o de testes do Resend:
+    from: process.env.RESEND_FROM || 'onboarding@resend.dev',
+  },
+
   smtp: {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: num(process.env.SMTP_PORT, 465),

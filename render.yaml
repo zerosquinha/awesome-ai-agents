@@ -19,9 +19,9 @@ services:
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORT
-        value: "465"
+        value: "587"
       - key: SMTP_SECURE
-        value: "true"
+        value: "false"
       - key: ONLY_WHEN_MENTIONED_IN_GROUPS
         value: "true"
       - key: FORWARD_COOLDOWN_HOURS

@@ -14,11 +14,19 @@ function getTransporter() {
     );
   }
 
+  // A senha de app do Gmail e mostrada com espacos (ex.: "abcd efgh ...").
+  // Removemos os espacos automaticamente para evitar erro de autenticacao.
+  const pass = String(config.smtp.pass).replace(/\s+/g, '');
+
   transporter = nodemailer.createTransport({
     host: config.smtp.host,
     port: config.smtp.port,
-    secure: config.smtp.secure,
-    auth: { user: config.smtp.user, pass: config.smtp.pass },
+    secure: config.smtp.secure, // true para porta 465; false para 587 (STARTTLS)
+    auth: { user: config.smtp.user, pass },
+    // Timeouts para nao travar caso a porta esteja bloqueada na hospedagem.
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
   });
 
   return transporter;
